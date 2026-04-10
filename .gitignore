@@ -3,8 +3,8 @@ data/*.csv
 data/*.zip
 data/*.parquet
 
-# Model files
-results/model/*.pkl
+# Model files - only exclude large intermediate cache, NOT the deliverable model
+results/model/processed_data.pkl
 results/model/*.joblib
 results/model/*.h5
 results/model/*.pt
@@ -42,10 +42,8 @@ results/clients_outputs/*.png
 results/clients_outputs/*.jpg
 results/clients_outputs/*.html
 
-# Generated outputs (re-created by predict.py / train.py)
+# Generated large outputs not needed in repo
 results/submission.csv
-results/feature_engineering/feature_importance.png
-results/feature_engineering/learning_curves.png
 
 # Temporary files
 *.log
