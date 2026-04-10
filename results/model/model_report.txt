@@ -1,0 +1,129 @@
+# Model Report – Credit Scoring
+
+## 1. Algorithm
+
+Algorithm used: LightGBM (Light Gradient Boosting Machine)
+
+LightGBM is a gradient boosting framework based on decision trees. It was
+selected for the following reasons:
+- Native handling of missing values (no imputation needed)
+- Fast training on large tabular datasets
+- Strong generalisation on mixed-type features
+- Built-in early stopping to prevent overfitting
+- Native feature importance compatible with SHAP
+- Handles class imbalance via row subsampling
+
+### Hyperparameters
+- boosting_type      : gbdt
+- n_estimators       : 5000 (with early stopping)
+- learning_rate      : 0.02
+- num_leaves         : 34
+- subsample          : 0.8
+- colsample_bytree   : 0.8
+- reg_alpha          : 0.1  (L1)
+- reg_lambda         : 0.1  (L2)
+- early_stopping_rounds: 100
+
+### Cross-Validation
+5-fold Stratified K-Fold – preserves class ratio in each fold; test
+predictions averaged across all 5 folds.
+
+
+## 2. Why Accuracy Should NOT Be Used
+
+The dataset is severely imbalanced: ~91.9 % non-default (TARGET=0) vs
+~8.1 % default (TARGET=1).
+
+A naive classifier that predicts "no default" for every client achieves
+~91.9 % accuracy while being completely useless for identifying risky
+clients.
+
+The correct metric is AUC-ROC:
+- Measures discriminative ability across ALL decision thresholds
+- Insensitive to class imbalance
+- Random classifier = 0.50; perfect classifier = 1.00
+- Captures the cost asymmetry between false negatives (missed defaulters)
+  and false positives (wrongly flagged good clients)
+
+
+## 3. Feature Engineering
+
+Features derived from 7 data sources:
+
+Application data:
+  CREDIT_INCOME_RATIO, ANNUITY_INCOME_RATIO, CREDIT_ANNUITY_RATIO,
+  GOODS_CREDIT_RATIO, AGE_YEARS, EMPLOYMENT_YEARS, DAYS_EMPLOYED_ANOM,
+  EXT_SOURCE_MEAN/STD/MIN/PROD, EXT_SOURCE pairwise products,
+  DOCUMENT_COUNT, INCOME_PER_PERSON
+
+Bureau aggregations (per SK_ID_CURR):
+  Loan count, credit/debt sums, active/closed ratios, DPD rates
+
+Previous application aggregations:
+  Approval/refusal/cancellation rates, credit amounts, decision timing
+
+POS CASH aggregations:
+  Mean/max DPD, active/completed counts
+
+Credit card aggregations:
+  Balance-to-limit ratio, drawing ratio, DPD stats
+
+Installments aggregations:
+  Late payment ratio, days past due stats, payment shortfall
+
+
+## 4. Preventing Overfitting
+
+Early stopping:
+  Training halts when validation AUC does not improve for 100 consecutive
+  boosting rounds.
+
+Regularization:
+  L1 (reg_alpha=0.1) and L2 (reg_lambda=0.1) penalise leaf weight
+  complexity. min_split_gain=0.01 suppresses trivial splits.
+
+Subsampling:
+  subsample=0.8 (row bagging) and colsample_bytree=0.8 (feature bagging)
+  reduce variance.
+
+Cross-validation:
+  OOF AUC is measured on data the model never saw during training.
+
+Learning curves:
+  Training vs validation AUC vs boosting rounds plotted to verify
+  convergence without divergence.
+  See: results/feature_engineering/learning_curves.png
+
+
+## 5. Limits and Possible Improvements
+
+Limitations:
+- Simple aggregation functions (mean/sum/max); trend features missing
+- No automated hyperparameter search
+- Class imbalance not explicitly addressed with SMOTE or class weights
+- Single model; no ensembling
+
+Improvements:
+- Optuna/Hyperopt for hyperparameter tuning (+0.5–1 % AUC)
+- Target encoding for high-cardinality categoricals
+- Time-aware features (trend of DPD over recent vs older months)
+- Stacking: LightGBM + XGBoost + CatBoost
+- Custom loss function weighting false negatives more heavily
+
+
+## 6. Model Interpretability
+
+Global – Feature Importance:
+  LightGBM split-count importance for all features.
+  Top features: EXT_SOURCE scores, credit/income ratios, age, bureau DPD.
+  See: results/feature_engineering/feature_importance.png
+
+Local – SHAP Values:
+  shap.TreeExplainer used to compute per-client SHAP values.
+  Waterfall plots show which features pushed score up/down relative to
+  the base value. SHAP values sum exactly to the predicted score.
+
+Client outputs:
+  results/clients_outputs/client1_correct_train.pdf
+  results/clients_outputs/client2_wrong_train.pdf
+  results/clients_outputs/client_test.pdf

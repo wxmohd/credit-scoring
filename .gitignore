@@ -1,0 +1,53 @@
+# Data files (can be large)
+data/*.csv
+data/*.zip
+data/*.parquet
+
+# Model files
+results/model/*.pkl
+results/model/*.joblib
+results/model/*.h5
+results/model/*.pt
+
+# Notebook checkpoints
+.ipynb_checkpoints/
+*/.ipynb_checkpoints/*
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Virtual environments
+venv/
+env/
+ENV/
+.venv
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Large output files
+results/clients_outputs/*.png
+results/clients_outputs/*.jpg
+results/clients_outputs/*.html
+
+# Generated outputs (re-created by predict.py / train.py)
+results/submission.csv
+results/feature_engineering/feature_importance.png
+results/feature_engineering/learning_curves.png
+
+# Temporary files
+*.log
+*.tmp
+.cache/
