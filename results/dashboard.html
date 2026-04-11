@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Credit Scoring – Results Dashboard</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', sans-serif; background: #0f1117; color: #e0e0e0; }
+
+    header {
+      background: linear-gradient(135deg, #1a237e, #0d47a1);
+      padding: 32px 40px;
+      border-bottom: 3px solid #1565c0;
+    }
+    header h1 { font-size: 2rem; color: #fff; }
+    header p  { color: #90caf9; margin-top: 6px; font-size: 0.95rem; }
+
+    .container { max-width: 1300px; margin: 0 auto; padding: 32px 24px; }
+
+    /* ── KPI Cards ── */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 16px;
+      margin-bottom: 36px;
+    }
+    .kpi {
+      background: #1e1e2e;
+      border: 1px solid #2a2a3e;
+      border-radius: 12px;
+      padding: 22px 18px;
+      text-align: center;
+    }
+    .kpi .value { font-size: 2.2rem; font-weight: 700; color: #42a5f5; }
+    .kpi .label { font-size: 0.8rem; color: #888; margin-top: 6px; text-transform: uppercase; letter-spacing: 0.05em; }
+
+    /* ── Section ── */
+    .section { margin-bottom: 40px; }
+    .section h2 {
+      font-size: 1.15rem;
+      color: #90caf9;
+      border-left: 4px solid #1565c0;
+      padding-left: 12px;
+      margin-bottom: 18px;
+    }
+
+    /* ── Two-col layout ── */
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    @media (max-width: 800px) { .two-col { grid-template-columns: 1fr; } }
+
+    /* ── Cards ── */
+    .card {
+      background: #1e1e2e;
+      border: 1px solid #2a2a3e;
+      border-radius: 12px;
+      padding: 22px;
+    }
+    .card h3 { font-size: 0.95rem; color: #ccc; margin-bottom: 14px; }
+
+    /* ── Images ── */
+    .img-card { background: #1e1e2e; border: 1px solid #2a2a3e; border-radius: 12px; overflow: hidden; }
+    .img-card img { width: 100%; display: block; }
+    .img-card .img-label {
+      padding: 10px 16px;
+      font-size: 0.82rem;
+      color: #888;
+      border-top: 1px solid #2a2a3e;
+    }
+
+    /* ── Fold table ── */
+    table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+    th { background: #12122a; color: #90caf9; padding: 9px 12px; text-align: left; }
+    td { padding: 8px 12px; border-bottom: 1px solid #2a2a3e; color: #ccc; }
+    tr:last-child td { border-bottom: none; }
+    .good  { color: #66bb6a; font-weight: 600; }
+    .bad   { color: #ef5350; font-weight: 600; }
+
+    /* ── PDF links ── */
+    .pdf-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+    .pdf-card {
+      background: #1e1e2e;
+      border: 1px solid #2a2a3e;
+      border-radius: 12px;
+      padding: 20px;
+      text-decoration: none;
+      color: inherit;
+      transition: border-color 0.2s, transform 0.2s;
+      display: block;
+    }
+    .pdf-card:hover { border-color: #42a5f5; transform: translateY(-2px); }
+    .pdf-card .icon { font-size: 2rem; margin-bottom: 10px; }
+    .pdf-card .title { font-size: 0.95rem; color: #e0e0e0; font-weight: 600; }
+    .pdf-card .sub   { font-size: 0.8rem; color: #888; margin-top: 4px; }
+    .tag {
+      display: inline-block;
+      margin-top: 10px;
+      padding: 2px 10px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    .tag-correct { background: #1b5e20; color: #a5d6a7; }
+    .tag-wrong   { background: #b71c1c; color: #ffcdd2; }
+    .tag-test    { background: #0d47a1; color: #bbdefb; }
+
+    /* ── Feature list ── */
+    .feature-list { list-style: none; }
+    .feature-list li {
+      padding: 6px 0;
+      border-bottom: 1px solid #2a2a3e;
+      font-size: 0.88rem;
+      color: #ccc;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .feature-list li:last-child { border-bottom: none; }
+    .badge {
+      font-size: 0.75rem;
+      padding: 2px 8px;
+      border-radius: 10px;
+      background: #0d47a1;
+      color: #90caf9;
+    }
+
+    /* ── Progress bar ── */
+    .progress-wrap { margin-bottom: 10px; }
+    .progress-label { display: flex; justify-content: space-between; font-size: 0.82rem; color: #aaa; margin-bottom: 4px; }
+    .progress-bar { height: 8px; background: #12122a; border-radius: 4px; overflow: hidden; }
+    .progress-fill { height: 100%; border-radius: 4px; background: linear-gradient(90deg, #1565c0, #42a5f5); }
+
+    footer { text-align: center; padding: 24px; color: #444; font-size: 0.8rem; border-top: 1px solid #2a2a3e; margin-top: 20px; }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>📊 Credit Scoring — Results Dashboard</h1>
+  <p>LightGBM · 5-Fold Stratified CV · Home Credit Default Risk</p>
+</header>
+
+<div class="container">
+
+  <!-- KPI Row -->
+  <div class="kpi-grid">
+    <div class="kpi"><div class="value">79%</div><div class="label">Test AUC</div></div>
+    <div class="kpi"><div class="value">78.68%</div><div class="label">OOF AUC (CV)</div></div>
+    <div class="kpi"><div class="value">5</div><div class="label">CV Folds</div></div>
+    <div class="kpi"><div class="value">210</div><div class="label">Features</div></div>
+    <div class="kpi"><div class="value">307K</div><div class="label">Train Clients</div></div>
+    <div class="kpi"><div class="value">8.1%</div><div class="label">Default Rate</div></div>
+  </div>
+
+  <!-- AUC Progress -->
+  <div class="section">
+    <h2>Model Performance vs Target</h2>
+    <div class="card">
+      <div class="progress-wrap">
+        <div class="progress-label"><span>Minimum Target (55%)</span><span>55%</span></div>
+        <div class="progress-bar"><div class="progress-fill" style="width:55%"></div></div>
+      </div>
+      <div class="progress-wrap">
+        <div class="progress-label"><span>Stretch Target (62%)</span><span>62%</span></div>
+        <div class="progress-bar"><div class="progress-fill" style="width:62%"></div></div>
+      </div>
+      <div class="progress-wrap">
+        <div class="progress-label"><span style="color:#66bb6a;font-weight:600">Achieved OOF AUC (78.68%)</span><span style="color:#66bb6a">78.68%</span></div>
+        <div class="progress-bar"><div class="progress-fill" style="width:78.68%; background: linear-gradient(90deg,#2e7d32,#66bb6a)"></div></div>
+      </div>
+      <div class="progress-wrap">
+        <div class="progress-label"><span style="color:#42a5f5;font-weight:600">Achieved Test AUC (79%)</span><span style="color:#42a5f5">79%</span></div>
+        <div class="progress-bar"><div class="progress-fill" style="width:79%; background: linear-gradient(90deg,#1565c0,#42a5f5)"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Fold Scores + Feature Sources -->
+  <div class="section two-col">
+    <div class="card">
+      <h3>Cross-Validation Fold Scores</h3>
+      <table>
+        <thead><tr><th>Fold</th><th>AUC Score</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td>Fold 1</td><td>0.7829</td><td class="good">✓ Above target</td></tr>
+          <tr><td>Fold 2</td><td>0.7851</td><td class="good">✓ Above target</td></tr>
+          <tr><td>Fold 3</td><td>0.7868</td><td class="good">✓ Above target</td></tr>
+          <tr><td>Fold 4</td><td>0.7903</td><td class="good">✓ Above target</td></tr>
+          <tr><td>Fold 5</td><td>0.7920</td><td class="good">✓ Above target</td></tr>
+          <tr><td><strong>OOF (overall)</strong></td><td><strong>0.7868</strong></td><td class="good">✓ Consistent</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <h3>Feature Sources</h3>
+      <ul class="feature-list">
+        <li>Application form <span class="badge">122 raw → engineered</span></li>
+        <li>Bureau (other banks) <span class="badge">16 features</span></li>
+        <li>Bureau balance (DPD history) <span class="badge">5 features</span></li>
+        <li>Previous applications <span class="badge">17 features</span></li>
+        <li>POS Cash balance <span class="badge">9 features</span></li>
+        <li>Credit card balance <span class="badge">11 features</span></li>
+        <li>Installments payments <span class="badge">13 features</span></li>
+        <li><strong>Total after merging</strong> <span class="badge" style="background:#1b5e20;color:#a5d6a7">210 features</span></li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Charts -->
+  <div class="section">
+    <h2>Training Charts</h2>
+    <div class="two-col">
+      <div class="img-card">
+        <img src="feature_engineering/feature_importance.png" alt="Feature Importance" />
+        <div class="img-label">📈 Top 30 Feature Importances — EXT_SOURCE scores dominate</div>
+      </div>
+      <div class="img-card">
+        <img src="feature_engineering/learning_curves.png" alt="Learning Curves" />
+        <div class="img-label">📉 Learning Curves — Train vs Validation AUC per boosting round</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Client PDFs -->
+  <div class="section">
+    <h2>Client Reports (PDF)</h2>
+    <div class="pdf-grid">
+      <a class="pdf-card" href="clients_outputs/client1_correct_train.pdf" target="_blank">
+        <div class="icon">📄</div>
+        <div class="title">Client 1 — Correct Prediction</div>
+        <div class="sub">Training set · Model was confident and right</div>
+        <span class="tag tag-correct">✓ Correctly classified</span>
+      </a>
+      <a class="pdf-card" href="clients_outputs/client2_wrong_train.pdf" target="_blank">
+        <div class="icon">📄</div>
+        <div class="title">Client 2 — Wrong Prediction</div>
+        <div class="sub">Training set · Model was confident but wrong</div>
+        <span class="tag tag-wrong">✗ Misclassified</span>
+      </a>
+      <a class="pdf-card" href="clients_outputs/client_test.pdf" target="_blank">
+        <div class="icon">📄</div>
+        <div class="title">Client 3 — Test Client</div>
+        <div class="sub">Test set · Unknown true label</div>
+        <span class="tag tag-test">🔍 Test prediction</span>
+      </a>
+    </div>
+    <p style="margin-top:12px; font-size:0.8rem; color:#555;">Each PDF contains: client profile bar chart · comparison vs population histograms · SHAP waterfall explanation</p>
+  </div>
+
+  <!-- Model Summary -->
+  <div class="section">
+    <h2>Model Summary</h2>
+    <div class="two-col">
+      <div class="card">
+        <h3>Algorithm</h3>
+        <table>
+          <tr><td>Model</td><td class="good">LightGBM (GBDT)</td></tr>
+          <tr><td>Metric</td><td>AUC-ROC</td></tr>
+          <tr><td>Max trees</td><td>5000 (early stopping)</td></tr>
+          <tr><td>Learning rate</td><td>0.02</td></tr>
+          <tr><td>Num leaves</td><td>34</td></tr>
+          <tr><td>Row sampling</td><td>80%</td></tr>
+          <tr><td>Feature sampling</td><td>80%</td></tr>
+          <tr><td>L1 / L2 reg</td><td>0.1 / 0.1</td></tr>
+          <tr><td>Early stopping</td><td>100 rounds</td></tr>
+        </table>
+      </div>
+      <div class="card">
+        <h3>Why Not Accuracy?</h3>
+        <p style="font-size:0.88rem; color:#aaa; line-height:1.7">
+          The dataset has severe class imbalance:<br>
+          <span style="color:#42a5f5">91.9%</span> repaid &nbsp;|&nbsp; <span style="color:#ef5350">8.1%</span> didn't repay<br><br>
+          A model that predicts <em>everyone repays</em> gets <strong>91.9% accuracy</strong> but is completely useless — it never catches a risky client.<br><br>
+          <strong>AUC-ROC</strong> measures whether the model correctly ranks risky clients above safe ones, regardless of threshold. A random model = 0.50. Our model = <span style="color:#66bb6a">0.79</span>.
+        </p>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<footer>Credit Scoring Project · LightGBM · AUC 79% · Home Credit Default Risk Dataset</footer>
+
+</body>
+</html>
